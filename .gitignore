@@ -1,3 +1,6 @@
 /mewcode
 /mewcode.exe
 *.exe
+
+# demo output
+/demo_out.txt

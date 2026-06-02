@@ -20,16 +20,15 @@ type Client interface {
 	Stream(ctx context.Context, conv *conversation.Manager, toolSchemas []map[string]any) (<-chan StreamEvent, <-chan error)
 }
 
-// NewClient builds the Client for the configured protocol. The concrete
-// implementations are wired in by later tasks: the fake backend in T5, the
-// Anthropic backend in T7. Until then a valid protocol returns a clear
-// not-implemented error, while an unknown protocol is rejected here.
+// NewClient builds the Client for the configured protocol. Anthropic is the
+// real backend this round; OpenAI is reserved (interface only) and an unknown
+// protocol is rejected here.
 func NewClient(cfg *config.Config, systemPrompt string) (Client, error) {
 	switch cfg.Protocol {
 	case config.ProtocolAnthropic:
-		return nil, fmt.Errorf("anthropic backend not implemented yet (task T7)")
+		return newAnthropicClient(cfg, systemPrompt), nil
 	case config.ProtocolOpenAI:
-		return nil, fmt.Errorf("openai backend not implemented yet (out of scope this round)")
+		return newOpenAIClient(cfg, systemPrompt), nil
 	default:
 		return nil, fmt.Errorf("unknown protocol %q", cfg.Protocol)
 	}

@@ -45,11 +45,14 @@ func TestNewClientUnknownProtocol(t *testing.T) {
 	}
 }
 
-func TestNewClientAnthropicNotYetImplemented(t *testing.T) {
-	// Until T7 the Anthropic branch is a clearly-marked stub.
-	_, err := NewClient(&config.Config{Protocol: config.ProtocolAnthropic}, "")
-	if err == nil {
-		t.Fatal("expected not-implemented error for anthropic stub")
+func TestNewClientAnthropicReturnsClient(t *testing.T) {
+	// T7: the Anthropic branch now builds a real client.
+	c, err := NewClient(&config.Config{Protocol: config.ProtocolAnthropic, Model: "claude-opus-4-8", MaxTokens: 8192}, "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if c == nil {
+		t.Fatal("expected a non-nil Client")
 	}
 }
 

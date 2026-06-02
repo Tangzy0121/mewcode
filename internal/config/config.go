@@ -53,6 +53,7 @@ type Config struct {
 	Model     string   // model id sent on every request
 	MaxTokens int      // upper bound on tokens generated per request
 	Mode      string   // startup permission mode: plan | default | auto
+	Fake      bool     // run the offline demo backend instead of a real API (no key needed)
 }
 
 // Load resolves configuration from the given argument list (typically
@@ -67,6 +68,7 @@ func Load(args []string) (*Config, error) {
 		protocol = fs.String("protocol", string(ProtocolAnthropic), "model backend: anthropic | openai")
 		baseURL  = fs.String("base-url", os.Getenv(EnvBaseURL), "override the API base URL")
 		maxTok   = fs.Int("max-tokens", DefaultMaxTokens, "max tokens generated per request")
+		fake     = fs.Bool("fake", false, "run the offline demo backend (no API key required)")
 	)
 	if err := fs.Parse(args); err != nil {
 		return nil, err
@@ -78,17 +80,21 @@ func Load(args []string) (*Config, error) {
 		Model:     *model,
 		MaxTokens: *maxTok,
 		Mode:      *mode,
+		Fake:      *fake,
 	}
 
 	if err := validateMode(cfg.Mode); err != nil {
 		return nil, err
 	}
 
-	key, err := credential(cfg.Protocol)
-	if err != nil {
-		return nil, err
+	// The offline demo backend needs no credential; skip the key requirement.
+	if !cfg.Fake {
+		key, err := credential(cfg.Protocol)
+		if err != nil {
+			return nil, err
+		}
+		cfg.APIKey = key
 	}
-	cfg.APIKey = key
 
 	if cfg.MaxTokens <= 0 {
 		return nil, fmt.Errorf("max-tokens must be positive, got %d", cfg.MaxTokens)
